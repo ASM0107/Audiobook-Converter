@@ -65,22 +65,34 @@ if uploaded_file is not None:
                 temp_dir = tempfile.gettempdir()
                 temp_file_path = os.path.join(temp_dir, "audiobook.mp3")
                 
-                # Generate Audio using edge-tts concurrently
-                async def generate_chunk(text_chunk, voice, index, t_dir):
-                    chunk_path = os.path.join(t_dir, f"chunk_{index}.mp3")
-                    communicate = edge_tts.Communicate(text_chunk, voice)
-                    await communicate.save(chunk_path)
-                    return chunk_path
+                # Generate Audio using edge-tts concurrently with a semaphore to avoid rate limits
+                async def generate_chunk(text_chunk, voice, index, t_dir, sem, retries=3):
+                    async with sem:
+                        chunk_path = os.path.join(t_dir, f"chunk_{index}.mp3")
+                        for attempt in range(retries):
+                            try:
+                                communicate = edge_tts.Communicate(text_chunk, voice)
+                                await communicate.save(chunk_path)
+                                return chunk_path
+                            except Exception as e:
+                                if attempt == retries - 1:
+                                    raise e
+                                await asyncio.sleep(1) # wait before retry
+                        return chunk_path
 
                 async def generate_audio_concurrently():
                     # Split text into chunks of ~4000 characters to process in parallel
                     chunks = textwrap.wrap(text, width=4000, break_long_words=False, break_on_hyphens=False)
                     
+                    # Limit to 5 concurrent requests so Microsoft's API doesn't block us
+                    sem = asyncio.Semaphore(5)
+                    
                     tasks = []
                     for i, chunk in enumerate(chunks):
-                        tasks.append(generate_chunk(chunk, selected_voice_id, i, temp_dir))
+                        if chunk.strip(): # Ensure chunk is not empty
+                            tasks.append(generate_chunk(chunk, selected_voice_id, i, temp_dir, sem))
                         
-                    # Run all API requests concurrently!
+                    # Run all API requests concurrently (up to 5 at a time)
                     chunk_files = await asyncio.gather(*tasks)
                     
                     # Concatenate MP3 chunks into the final file

@@ -1,6 +1,6 @@
 # pyrefly: ignore [missing-import]
 import streamlit as st
-from pypdf import PdfReader
+import fitz  # PyMuPDF
 import edge_tts
 import asyncio
 import tempfile
@@ -34,16 +34,18 @@ if uploaded_file is not None:
     
     try:
         # Read the PDF
-        pdf_reader = PdfReader(uploaded_file)
+        # We need to read the uploaded file bytes for PyMuPDF
+        pdf_bytes = uploaded_file.read()
+        pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
         text = ""
         
         # Adding a progress bar for text extraction
         progress_bar = st.progress(0)
-        num_pages = len(pdf_reader.pages)
+        num_pages = len(pdf_document)
         
         for page_num in range(num_pages):
-            page = pdf_reader.pages[page_num]
-            extracted_text = page.extract_text()
+            page = pdf_document.load_page(page_num)
+            extracted_text = page.get_text()
             if extracted_text:
                 text += extracted_text + "\n"
             progress_bar.progress((page_num + 1) / num_pages)

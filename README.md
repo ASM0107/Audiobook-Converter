@@ -4,8 +4,9 @@ A simple and elegant web application that converts your PDF documents into MP3 a
 
 ## Features
 - **Easy Uploads:** Upload any PDF document directly from the web interface.
-- **Fast Extraction:** Extracts text efficiently from your PDF pages.
-- **Text-to-Speech:** Uses Microsoft Edge's Neural Text-to-Speech (`edge-tts`) to generate high-quality, natural-sounding audio without strict rate limits.
+- **Fast Extraction & Smart Cleanup:** Extracts text efficiently from your PDF pages and automatically cleans up formatting issues (like excessive spaces or bad line breaks) for a flawless reading experience.
+- **Multiple Voices & Accents:** Choose from a variety of natural-sounding voices including US English, UK English, Indian English, and Australian English.
+- **High-Quality Text-to-Speech:** Uses Microsoft Edge's Neural Text-to-Speech (`edge-tts`) for premium audio generation without strict rate limits.
 - **Listen & Download:** Listen to the generated audiobook right in the browser or download it as an MP3 file.
 
 ## How to Run Locally

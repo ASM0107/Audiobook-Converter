@@ -6,6 +6,7 @@ import asyncio
 import tempfile
 import os
 import re
+import textwrap
 
 st.set_page_config(page_title="PDF to Audiobook Converter", page_icon="🎧", layout="centered")
 
@@ -64,12 +65,32 @@ if uploaded_file is not None:
                 temp_dir = tempfile.gettempdir()
                 temp_file_path = os.path.join(temp_dir, "audiobook.mp3")
                 
-                # Generate Audio using edge-tts
-                async def generate_audio():
-                    communicate = edge_tts.Communicate(text, selected_voice_id)
-                    await communicate.save(temp_file_path)
-                
-                asyncio.run(generate_audio())
+                # Generate Audio using edge-tts concurrently
+                async def generate_chunk(text_chunk, voice, index, t_dir):
+                    chunk_path = os.path.join(t_dir, f"chunk_{index}.mp3")
+                    communicate = edge_tts.Communicate(text_chunk, voice)
+                    await communicate.save(chunk_path)
+                    return chunk_path
+
+                async def generate_audio_concurrently():
+                    # Split text into chunks of ~4000 characters to process in parallel
+                    chunks = textwrap.wrap(text, width=4000, break_long_words=False, break_on_hyphens=False)
+                    
+                    tasks = []
+                    for i, chunk in enumerate(chunks):
+                        tasks.append(generate_chunk(chunk, selected_voice_id, i, temp_dir))
+                        
+                    # Run all API requests concurrently!
+                    chunk_files = await asyncio.gather(*tasks)
+                    
+                    # Concatenate MP3 chunks into the final file
+                    with open(temp_file_path, 'wb') as outfile:
+                        for chunk_file in chunk_files:
+                            with open(chunk_file, 'rb') as infile:
+                                outfile.write(infile.read())
+                            os.remove(chunk_file) # Clean up temporary chunk
+
+                asyncio.run(generate_audio_concurrently())
                 
             st.success("Audiobook generated successfully!")
             

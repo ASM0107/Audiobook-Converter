@@ -5,11 +5,27 @@ import edge_tts
 import asyncio
 import tempfile
 import os
+import re
 
 st.set_page_config(page_title="PDF to Audiobook Converter", page_icon="🎧", layout="centered")
 
+VOICE_OPTIONS = {
+    "US English (Female)": "en-US-AriaNeural",
+    "US English (Male)": "en-US-GuyNeural",
+    "UK English (Female)": "en-GB-SoniaNeural",
+    "UK English (Male)": "en-GB-RyanNeural",
+    "Indian English (Female)": "en-IN-NeerjaNeural",
+    "Indian English (Male)": "en-IN-PrabhatNeural",
+    "Australian English (Female)": "en-AU-NatashaNeural",
+    "Australian English (Male)": "en-AU-WilliamNeural"
+}
+
 st.title("🎧 PDF to Audiobook Converter")
 st.markdown("Convert your PDF documents into MP3 audiobooks easily. Upload your file below to get started!")
+
+# Add voice selection
+selected_voice_label = st.selectbox("🗣️ Select Voice / Accent", list(VOICE_OPTIONS.keys()))
+selected_voice_id = VOICE_OPTIONS[selected_voice_label]
 
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
@@ -32,7 +48,11 @@ if uploaded_file is not None:
                 text += extracted_text + "\n"
             progress_bar.progress((page_num + 1) / num_pages)
         
-        if text.strip() == "":
+        # Clean the text: remove newlines and multiple spaces which cause spelling issues
+        text = text.replace('\n', ' ')
+        text = re.sub(r'\s+', ' ', text).strip()
+
+        if text == "":
             st.error("No text could be extracted from this PDF. It might consist only of scanned images.")
         else:
             st.success("Text extracted successfully! Generating audio...")
@@ -44,8 +64,7 @@ if uploaded_file is not None:
                 
                 # Generate Audio using edge-tts
                 async def generate_audio():
-                    # You can change the voice here if you like (e.g., "en-GB-SoniaNeural")
-                    communicate = edge_tts.Communicate(text, "en-US-AriaNeural")
+                    communicate = edge_tts.Communicate(text, selected_voice_id)
                     await communicate.save(temp_file_path)
                 
                 asyncio.run(generate_audio())

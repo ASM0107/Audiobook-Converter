@@ -1,6 +1,8 @@
+# pyrefly: ignore [missing-import]
 import streamlit as st
 from pypdf import PdfReader
-from gtts import gTTS
+import edge_tts
+import asyncio
 import tempfile
 import os
 
@@ -36,14 +38,17 @@ if uploaded_file is not None:
             st.success("Text extracted successfully! Generating audio...")
             
             with st.spinner('Converting text to speech... This may take a few minutes for larger documents.'):
-                # Generate Audio
-                tts = gTTS(text=text, lang='en')
-                
                 # Save to a temporary file
                 temp_dir = tempfile.gettempdir()
                 temp_file_path = os.path.join(temp_dir, "audiobook.mp3")
                 
-                tts.save(temp_file_path)
+                # Generate Audio using edge-tts
+                async def generate_audio():
+                    # You can change the voice here if you like (e.g., "en-GB-SoniaNeural")
+                    communicate = edge_tts.Communicate(text, "en-US-AriaNeural")
+                    await communicate.save(temp_file_path)
+                
+                asyncio.run(generate_audio())
                 
             st.success("Audiobook generated successfully!")
             

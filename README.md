@@ -1,11 +1,11 @@
 # PDF to Audiobook Converter 🎧
 
-A simple and elegant web application that converts your PDF documents into MP3 audiobooks using Python. Built with [Streamlit](https://streamlit.io/), `pypdf`, and `gTTS` (Google Text-to-Speech).
+A simple and elegant web application that converts your PDF documents into MP3 audiobooks using Python. Built with [Streamlit](https://streamlit.io/), `pypdf`, and `edge-tts` (Microsoft Edge TTS for high-quality natural voices).
 
 ## Features
 - **Easy Uploads:** Upload any PDF document directly from the web interface.
 - **Fast Extraction:** Extracts text efficiently from your PDF pages.
-- **Text-to-Speech:** Uses Google Text-to-Speech to generate high-quality audio.
+- **Text-to-Speech:** Uses Microsoft Edge's Neural Text-to-Speech (`edge-tts`) to generate high-quality, natural-sounding audio without strict rate limits.
 - **Listen & Download:** Listen to the generated audiobook right in the browser or download it as an MP3 file.
 
 ## How to Run Locally
